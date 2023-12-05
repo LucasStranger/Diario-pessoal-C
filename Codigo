@@ -1,0 +1,440 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_REGISTROS 150
+
+bool autenticar() {
+  char senhaCorreta[20] = "senha123";
+  char senha[20];
+
+  printf("Digite a senha para acessar o diário: ");
+  fgets(senha, sizeof(senha), stdin);
+  senha[strcspn(senha, "\n")] = '\0';
+
+  return strcmp(senha, senhaCorreta) == 0;
+}
+
+struct RegistroDiario {
+  char *data;
+  char *horario;
+  char *nome;
+  char *local;
+  char *duracao;
+  char *observacao;
+  char *senha;
+};
+
+struct RegistroDiario *registros[MAX_REGISTROS];
+int numeroRegistros = 0;
+
+bool isDateInRange(const char *date, const char *startDate,
+                   const char *endDate) {
+  return (strcmp(date, startDate) >= 0) && (strcmp(date, endDate) <= 0);
+}
+
+void deletarTodosRegistros() {
+  for (int i = 0; i < numeroRegistros; i++) {
+    free(registros[i]->data);
+    free(registros[i]->horario);
+    free(registros[i]->nome);
+    free(registros[i]->local);
+    free(registros[i]->duracao);
+    free(registros[i]->observacao);
+    free(registros[i]->senha);
+    free(registros[i]);
+  }
+  numeroRegistros = 0;
+}
+
+void deletarRegistroPorData(const char *data) {
+  for (int i = 0; i < numeroRegistros; i++) {
+    if (strcmp(registros[i]->data, data) == 0) {
+      free(registros[i]->data);
+      free(registros[i]->horario);
+      free(registros[i]->nome);
+      free(registros[i]->local);
+      free(registros[i]->duracao);
+      free(registros[i]->observacao);
+      free(registros[i]->senha);
+      free(registros[i]);
+      for (int j = i; j < numeroRegistros - 1; j++) {
+        registros[j] = registros[j + 1];
+      }
+      numeroRegistros--;
+      i--;
+    }
+  }
+}
+
+void deletarRegistrosNoPeriodo(const char *startDate, const char *endDate) {
+  for (int i = 0; i < numeroRegistros; i++) {
+    if (isDateInRange(registros[i]->data, startDate, endDate)) {
+      free(registros[i]->data);
+      free(registros[i]->horario);
+      free(registros[i]->nome);
+      free(registros[i]->local);
+      free(registros[i]->duracao);
+      free(registros[i]->observacao);
+      free(registros[i]->senha);
+      free(registros[i]);
+      for (int j = i; j < numeroRegistros - 1; j++) {
+        registros[j] = registros[j + 1];
+      }
+      numeroRegistros--;
+      i--;
+    }
+  }
+}
+
+void adicionarRegistro() {
+  if (numeroRegistros == MAX_REGISTROS) {
+    printf("\nO limite máximo de registros foi atingido.\n\n");
+    return;
+  }
+
+  struct RegistroDiario *novoRegistro = malloc(sizeof(struct RegistroDiario));
+  novoRegistro->data = malloc(20 * sizeof(char));
+  novoRegistro->horario = malloc(10 * sizeof(char));
+  novoRegistro->nome = malloc(50 * sizeof(char));
+  novoRegistro->local = malloc(50 * sizeof(char));
+  novoRegistro->duracao = malloc(20 * sizeof(char));
+  novoRegistro->observacao = malloc(200 * sizeof(char));
+  novoRegistro->senha = malloc(20 * sizeof(char));
+
+  printf("\n\n  =============================\n");
+  printf("  | [+] Adicionar Registro %d  |\n", numeroRegistros + 1);
+  printf("  =============================\n\n\n");
+  char senha[20];
+  printf("Digite a senha: ");
+  fgets(senha, sizeof(senha), stdin);
+  senha[strcspn(senha, "\n")] = '\0';
+
+  strcpy(novoRegistro->senha, senha);
+
+  printf("\nData: ");
+  fgets(novoRegistro->data, 20, stdin);
+  novoRegistro->data[strcspn(novoRegistro->data, "\n")] = '\0';
+
+  printf("Horário: ");
+  fgets(novoRegistro->horario, 10, stdin);
+  novoRegistro->horario[strcspn(novoRegistro->horario, "\n")] = '\0';
+
+  printf("Nome: ");
+  fgets(novoRegistro->nome, 50, stdin);
+  novoRegistro->nome[strcspn(novoRegistro->nome, "\n")] = '\0';
+
+  printf("Local: ");
+  fgets(novoRegistro->local, 50, stdin);
+  novoRegistro->local[strcspn(novoRegistro->local, "\n")] = '\0';
+
+  printf("Duração: ");
+  fgets(novoRegistro->duracao, 20, stdin);
+  novoRegistro->duracao[strcspn(novoRegistro->duracao, "\n")] = '\0';
+
+  printf("Observação: ");
+  fgets(novoRegistro->observacao, 200, stdin);
+  novoRegistro->observacao[strcspn(novoRegistro->observacao, "\n")] = '\0';
+
+  registros[numeroRegistros] = novoRegistro;
+  numeroRegistros++;
+
+  printf("\nRegistro adicionado com sucesso!\n\n");
+}
+
+void listarRegistros() {
+  if (numeroRegistros == 0) {
+    printf("\nNenhum registro encontrado.\n\n");
+    return;
+  }
+
+  printf("\n\n  ========================\n");
+  printf("  | [>] Listar Registros |\n");
+  printf("  ========================\n\n\n");
+
+  printf("Escolha uma opção:\n");
+  printf("1 - Listar todos os registros\n");
+  printf("2 - Listar apenas um registro\n");
+  printf("\n-> Escolha uma opcao: ");
+
+  int escolhaListagem;
+  scanf(" %d", &escolhaListagem);
+  getchar();
+
+  if (escolhaListagem == 1) {
+    // Listar todos os registros
+    for (int i = 0; i < numeroRegistros; i++) {
+      printf("Registro %d\n\n", i + 1);
+      printf("Data: %s\n", registros[i]->data);
+      printf("Horário: %s\n", registros[i]->horario);
+      printf("Nome: %s\n", registros[i]->nome);
+      printf("Local: %s\n", registros[i]->local);
+      printf("Duração: %s\n", registros[i]->duracao);
+      printf("Observação: %s\n\n", registros[i]->observacao);
+    }
+  } else if (escolhaListagem == 2) {
+    // Listar apenas um registro
+    int numeroRegistro;
+
+    printf("\nDigite o número do registro que deseja listar: ");
+    scanf("%d", &numeroRegistro);
+    getchar();
+
+    if (numeroRegistro < 1 || numeroRegistro > numeroRegistros) {
+      printf("\nNúmero de registro inválido.\n\n");
+      return;
+    }
+
+    numeroRegistro--; // Ajustando para a indexação do vetor (inicia em 0)
+
+    printf("Registro %d\n\n", numeroRegistro + 1);
+    printf("Data: %s\n", registros[numeroRegistro]->data);
+    printf("Horário: %s\n", registros[numeroRegistro]->horario);
+    printf("Nome: %s\n", registros[numeroRegistro]->nome);
+    printf("Local: %s\n", registros[numeroRegistro]->local);
+    printf("Duração: %s\n", registros[numeroRegistro]->duracao);
+    printf("Observação: %s\n\n", registros[numeroRegistro]->observacao);
+  } else {
+    printf("\nOpção inválida! Tente novamente.\n\n");
+  }
+}
+
+void editarRegistro() {
+  int numeroRegistro;
+
+  if (numeroRegistros == 0) {
+    printf("\nNenhum registro encontrado para editar.\n\n");
+    return;
+  }
+
+  printf("\nDigite o número do registro que deseja editar: ");
+  scanf("%d", &numeroRegistro);
+  getchar();
+
+  if (numeroRegistro < 1 || numeroRegistro > numeroRegistros) {
+    printf("\nNúmero de registro inválido.\n\n");
+    return;
+  }
+
+  numeroRegistro--; // Ajustando para a indexação do vetor (inicia em 0)
+
+  printf("\nEdição do Registro %d\n\n", numeroRegistro + 1);
+
+  printf("Nova Data: ");
+  fgets(registros[numeroRegistro]->data, 20, stdin);
+  registros[numeroRegistro]
+      ->data[strcspn(registros[numeroRegistro]->data, "\n")] = '\0';
+
+  printf("Novo Horário: ");
+  fgets(registros[numeroRegistro]->horario, 10, stdin);
+  registros[numeroRegistro]
+      ->horario[strcspn(registros[numeroRegistro]->horario, "\n")] = '\0';
+
+  printf("Novo Nome: ");
+  fgets(registros[numeroRegistro]->nome, 50, stdin);
+  registros[numeroRegistro]
+      ->nome[strcspn(registros[numeroRegistro]->nome, "\n")] = '\0';
+
+  printf("Novo Local: ");
+  fgets(registros[numeroRegistro]->local, 50, stdin);
+  registros[numeroRegistro]
+      ->local[strcspn(registros[numeroRegistro]->local, "\n")] = '\0';
+
+  printf("Nova Duração: ");
+  fgets(registros[numeroRegistro]->duracao, 20, stdin);
+  registros[numeroRegistro]
+      ->duracao[strcspn(registros[numeroRegistro]->duracao, "\n")] = '\0';
+
+  printf("Nova Observação: ");
+  fgets(registros[numeroRegistro]->observacao, 200, stdin);
+  registros[numeroRegistro]
+      ->observacao[strcspn(registros[numeroRegistro]->observacao, "\n")] = '\0';
+
+  printf("\nRegistro editado com sucesso!\n\n");
+}
+
+void definirSenha(int numeroRegistro) {
+  printf("\nDefinir senha para o Registro %d:\n\n", numeroRegistro + 1);
+
+  char senha[20];
+  printf("Digite a senha para este registro: ");
+  fgets(senha, sizeof(senha), stdin);
+  senha[strcspn(senha, "\n")] = '\0';
+
+  registros[numeroRegistro]->senha = malloc((strlen(senha) + 1) * sizeof(char));
+  strcpy(registros[numeroRegistro]->senha, senha);
+
+  printf("\nSenha definida com sucesso para o Registro %d!\n\n",
+         numeroRegistro + 1);
+}
+
+bool verificarSenha(int numeroRegistro) {
+  char senha[20];
+  printf("\nDigite a senha para o Registro %d: ", numeroRegistro + 1);
+  fgets(senha, sizeof(senha), stdin);
+  senha[strcspn(senha, "\n")] = '\0';
+
+  return strcmp(senha, registros[numeroRegistro]->senha) == 0;
+}
+
+void editarSenha(int numeroRegistro) {
+
+  if (!verificarSenha(numeroRegistro)) {
+    printf("\nSenha incorreta para o Registro %d!\n\n", numeroRegistro + 1);
+    return;
+  }
+
+  char novaSenha[20];
+  printf("Digite a nova senha para este registro: ");
+  fgets(novaSenha, sizeof(novaSenha), stdin);
+  novaSenha[strcspn(novaSenha, "\n")] = '\0';
+
+  free(registros[numeroRegistro]->senha); // Libera a senha antiga
+  registros[numeroRegistro]->senha =
+      malloc((strlen(novaSenha) + 1) * sizeof(char));
+  strcpy(registros[numeroRegistro]->senha, novaSenha);
+
+  printf("\nSenha editada com sucesso para o Registro %d!\n\n",
+         numeroRegistro + 1);
+}
+
+int main() {
+  if (!autenticar()) {
+    printf("\nAcesso negado. Senha incorreta.\n");
+    return 1;
+  }
+  int escolha;
+
+  while (1) {
+    printf("\n  =========================\n");
+    printf("  |     Menu Principal    |\n");
+    printf("  =========================\n\n");
+    printf("1 - [+] Adicionar Registro\n");
+    printf("2 - [>] Listar Registros\n");
+    printf("3 - [✎] Editar Registro\n");
+    printf("4 - [x] Deletar Registros\n");
+    printf("5 - [🔒] Editar Senha\n");
+    printf("6 - [Sair]\n");
+    printf("\n-> Escolha uma opcao: ");
+
+    scanf(" %d", &escolha);
+    getchar();
+
+    switch (escolha) {
+    case 1:
+      printf("\n[+] Adicionar Registro selecionado.\n");
+      adicionarRegistro();
+      break;
+    case 2:
+      printf("\n[>] Listar Registros selecionado.\n");
+      listarRegistros();
+      break;
+    case 3: {
+      int numeroRegistro;
+
+      if (numeroRegistros == 0) {
+        printf("\nNenhum registro encontrado para editar.\n\n");
+        break;
+      }
+
+      printf("\n[✎] Editar Registro selecionado.\n");
+      printf("\nDigite o número do registro que deseja editar: ");
+      scanf("%d", &numeroRegistro);
+      getchar();
+
+      if (numeroRegistro < 1 || numeroRegistro > numeroRegistros) {
+        printf("\nNúmero de registro inválido.\n\n");
+        break;
+      }
+
+      numeroRegistro--;
+
+      if (!verificarSenha(numeroRegistro)) {
+        printf("\nSenha incorreta para o Registro %d!\n\n", numeroRegistro + 1);
+        break;
+      }
+
+      editarRegistro();
+      break;
+    }
+    case 4:
+      printf("\n[x] Deletar Registros selecionado.\n");
+      printf("Escolha uma opção:\n");
+      printf("1 - Deletar todos os registros\n");
+      printf("2 - Deletar um registro por data\n");
+      printf("3 - Deletar registros em um período\n");
+      printf("\n-> Escolha uma opcao: ");
+
+      int opcaoDeletar;
+      scanf(" %d", &opcaoDeletar);
+      getchar();
+
+      switch (opcaoDeletar) {
+        case 1:
+          deletarTodosRegistros();
+          printf("\nTodos os registros foram deletados.\n");
+          break;
+        case 2: {
+          char dataParaDeletar[20];
+          printf("Digite a data do registro a ser deletado: ");
+          fgets(dataParaDeletar, 20, stdin);
+          dataParaDeletar[strcspn(dataParaDeletar, "\n")] = '\0';
+          deletarRegistroPorData(dataParaDeletar);
+          break;
+        }
+        case 3: {
+          char startDate[20], endDate[20];
+          printf("Digite a data de início do período (formato YYYY-MM-DD): ");
+          fgets(startDate, 20, stdin);
+          startDate[strcspn(startDate, "\n")] = '\0';
+
+          printf("Digite a data de término do período (formato YYYY-MM-DD): ");
+          fgets(endDate, 20, stdin);
+          endDate[strcspn(endDate, "\n")] = '\0';
+
+          deletarRegistrosNoPeriodo(startDate, endDate);
+          break;
+        }
+        default:
+          printf("\nOpção inválida! Tente novamente.\n\n");
+      }
+      break;
+    case 5: {
+      int numeroRegistro;
+
+      if (numeroRegistros == 0) {
+        printf("\nNenhum registro encontrado para editar senha.\n\n");
+        break;
+      }
+
+      printf("\n[🔒] Editar Senha selecionado.\n");
+
+      printf("\n\n  ==================\n");
+      printf("  | [🔒] Nova Senha |\n");
+      printf("  ==================\n\n");
+
+      printf("\nDigite o número do registro que deseja editar a senha: ");
+      scanf("%d", &numeroRegistro);
+      getchar();
+
+      if (numeroRegistro < 1 || numeroRegistro > numeroRegistros) {
+        printf("\nNúmero de registro inválido.\n\n");
+        break;
+      }
+
+      numeroRegistro--;
+
+      editarSenha(numeroRegistro);
+      break;
+    }
+    case 6:
+      printf("\n[Sair] selecionado. Encerrando o programa.\n");
+      exit(0);
+    default:
+      printf("\nOpção inválida! Tente novamente.\n\n");
+    }
+  }
+
+  return 0;
+}
